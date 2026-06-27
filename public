@@ -1,1 +1,356 @@
 
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Robot Vérification — Mobile Money BF</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f5f5f3; --surface: #ffffff; --surface-2: #f9f9f8;
+  --border: rgba(0,0,0,0.1); --border-strong: rgba(0,0,0,0.2);
+  --text: #1a1a18; --text-muted: #6b6b68; --text-secondary: #4a4a47;
+  --accent: #2563eb; --accent-bg: #eff6ff;
+  --success: #16a34a; --success-bg: #f0fdf4;
+  --danger: #dc2626; --danger-bg: #fef2f2;
+  --warning: #d97706; --warning-bg: #fffbeb;
+  --radius: 8px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a1a18; --surface: #252523; --surface-2: #2c2c2a;
+    --border: rgba(255,255,255,0.1); --border-strong: rgba(255,255,255,0.2);
+    --text: #f0f0ee; --text-muted: #888886; --text-secondary: #b0b0ae;
+    --accent-bg: #1e3a6e; --success-bg: #052e16;
+    --danger-bg: #450a0a; --warning-bg: #422006;
+  }
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; padding: 1.5rem 1rem 3rem;
+}
+.container { width: 100%; max-width: 480px; }
+
+header { text-align: center; margin-bottom: 1.5rem; }
+.logo {
+  width: 64px; height: 64px; background: var(--accent-bg);
+  border-radius: 18px; display: flex; align-items: center;
+  justify-content: center; margin: 0 auto 12px;
+  font-size: 32px; color: var(--accent);
+}
+header h1 { font-size: 21px; font-weight: 600; margin-bottom: 4px; }
+header p { font-size: 14px; color: var(--text-muted); }
+
+.card { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; }
+.card-label { font-size: 13px; color: var(--text-secondary); font-weight: 500; display: block; margin-bottom: 8px; }
+select {
+  width: 100%; padding: 10px 12px;
+  border: 0.5px solid var(--border-strong); border-radius: var(--radius);
+  background: var(--surface); color: var(--text);
+  font-size: 15px; font-family: inherit;
+}
+
+.upload-zone {
+  border: 1.5px dashed var(--border-strong); border-radius: 12px;
+  padding: 2.5rem 1rem; text-align: center; cursor: pointer;
+  transition: all 0.15s; background: var(--surface-2); margin-bottom: 1rem;
+}
+.upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: var(--accent-bg); }
+.upload-zone i { font-size: 38px; color: var(--text-muted); display: block; margin-bottom: 10px; }
+.upload-zone p { font-size: 15px; color: var(--text-secondary); margin-bottom: 3px; }
+.upload-zone small { font-size: 12px; color: var(--text-muted); }
+#fileInput { display: none; }
+
+.preview { display: none; margin-bottom: 1rem; border-radius: 12px; overflow: hidden; border: 0.5px solid var(--border); }
+.preview img { width: 100%; display: block; max-height: 300px; object-fit: contain; background: var(--surface-2); }
+.preview-bar { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--surface); border-top: 0.5px solid var(--border); }
+.preview-bar span { font-size: 12px; color: var(--text-muted); }
+.preview-bar button { font-size: 12px; color: var(--danger); background: none; border: none; cursor: pointer; font-family: inherit; }
+
+.btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 13px; border: none; border-radius: var(--radius);
+  font-size: 16px; font-weight: 500; font-family: inherit;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { filter: brightness(1.1); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-ghost { background: transparent; color: var(--text-secondary); border: 0.5px solid var(--border-strong); margin-top: 10px; font-size: 14px; padding: 11px; }
+.btn-ghost:hover { background: var(--surface-2); }
+
+.result { border-radius: 12px; overflow: hidden; border: 0.5px solid var(--border); margin-top: 1rem; }
+.result-header { padding: 1.1rem 1.25rem; display: flex; align-items: center; gap: 12px; }
+.result-header.ok   { background: var(--success-bg); }
+.result-header.fail { background: var(--danger-bg); }
+.result-header.warn { background: var(--warning-bg); }
+.result-header i { font-size: 28px; flex-shrink: 0; }
+.result-header.ok   i { color: var(--success); }
+.result-header.fail i { color: var(--danger); }
+.result-header.warn i { color: var(--warning); }
+.result-header h3 { font-size: 17px; font-weight: 600; }
+.result-header.ok   h3 { color: var(--success); }
+.result-header.fail h3 { color: var(--danger); }
+.result-header.warn h3 { color: var(--warning); }
+.result-header .sub { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+
+.result-body { padding: 1rem 1.25rem; background: var(--surface); }
+.check-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid var(--border); font-size: 14px; }
+.check-item:last-child { border-bottom: none; }
+.check-item > i { font-size: 18px; margin-top: 1px; flex-shrink: 0; }
+.ok-icon   { color: var(--success); }
+.fail-icon { color: var(--danger); }
+.check-label { color: var(--text-secondary); min-width: 76px; font-weight: 500; padding-top: 1px; }
+.check-val strong { display: block; font-weight: 500; color: var(--text); }
+.check-val span   { font-size: 12px; color: var(--text-muted); margin-top: 1px; display: block; }
+
+.notes-box { margin-top: 12px; padding: 10px 12px; background: var(--surface-2); border-radius: var(--radius); border: 0.5px solid var(--border); font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+.loading { text-align: center; padding: 2.5rem 1rem; }
+.loading i { font-size: 36px; color: var(--accent); display: block; margin-bottom: 10px; animation: spin 1s linear infinite; }
+.loading p { font-size: 14px; color: var(--text-secondary); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+footer { text-align: center; margin-top: 2rem; font-size: 12px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="logo"><i class="ti ti-robot"></i></div>
+    <h1>Robot de vérification</h1>
+    <p>Transactions Mobile Money — Burkina Faso</p>
+  </header>
+
+  <div class="card">
+    <label class="card-label"><i class="ti ti-arrows-exchange" style="font-size:14px;vertical-align:-2px;margin-right:5px"></i>Type de transaction</label>
+    <select id="txType">
+      <option value="om_national">Orange Money — National (BF)</option>
+      <option value="moov_benin">Moov Bénin → Moov BF</option>
+      <option value="moov_togo">Moov Togo → Moov BF</option>
+      <option value="wave">Wave (CI / SN / ML / NE → BF)</option>
+      <option value="moov_national">Moov Money — National (BF)</option>
+      <option value="om_international">Orange Money — International (CI/ML/SN)</option>
+    </select>
+  </div>
+
+  <div class="upload-zone" id="uploadZone">
+    <i class="ti ti-photo-up"></i>
+    <p>Appuyez pour choisir une image</p>
+    <small>Capture d'écran ou photo du SMS de confirmation</small>
+    <input type="file" id="fileInput" accept="image/*" capture="environment">
+  </div>
+
+  <div class="preview" id="preview">
+    <img id="previewImg" src="" alt="Aperçu de la transaction">
+    <div class="preview-bar">
+      <span id="fileName">image.jpg</span>
+      <button onclick="reset()"><i class="ti ti-x" style="font-size:12px;vertical-align:-1px"></i> Changer</button>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" id="analyzeBtn" disabled onclick="analyze()">
+    <i class="ti ti-search"></i> Vérifier la transaction
+  </button>
+
+  <div id="resultArea"></div>
+</div>
+
+<footer>Propulsé par Gemini AI · Vérification automatique</footer>
+
+<script>
+const RULES = {
+  om_national:      { numero: "56853244",    nom: true,  date: false, jours: 0 },
+  moov_benin:       { numero: "22651507834", nom: false, date: true,  jours: 3 },
+  moov_togo:        { numero: "22651507834", nom: false, date: true,  jours: 3 },
+  wave:             { numero: "56853244",    nom: false, date: true,  jours: 3 },
+  moov_national:    { numero: "22651507834", nom: false, date: true,  jours: 3 },
+  om_international: { numero: "22656853244", nom: false, date: true,  jours: 3 }
+};
+
+let base64Data = null, fileType = "image/jpeg", fileName = "";
+
+const uploadZone = document.getElementById("uploadZone");
+const fileInput  = document.getElementById("fileInput");
+
+uploadZone.addEventListener("click", () => fileInput.click());
+uploadZone.addEventListener("dragover", e => { e.preventDefault(); uploadZone.classList.add("drag"); });
+uploadZone.addEventListener("dragleave", () => uploadZone.classList.remove("drag"));
+uploadZone.addEventListener("drop", e => { e.preventDefault(); uploadZone.classList.remove("drag"); handleFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener("change", e => handleFile(e.target.files[0]));
+
+function handleFile(file) {
+  if (!file) return;
+  fileType = file.type || "image/jpeg";
+  fileName = file.name;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    base64Data = ev.target.result.split(",")[1];
+    document.getElementById("previewImg").src = ev.target.result;
+    document.getElementById("fileName").textContent = fileName;
+    document.getElementById("preview").style.display = "block";
+    document.getElementById("uploadZone").style.display = "none";
+    document.getElementById("analyzeBtn").disabled = false;
+    document.getElementById("resultArea").innerHTML = "";
+  };
+  reader.readAsDataURL(file);
+}
+
+function reset() {
+  base64Data = null;
+  document.getElementById("preview").style.display = "none";
+  document.getElementById("uploadZone").style.display = "block";
+  document.getElementById("previewImg").src = "";
+  document.getElementById("fileInput").value = "";
+  document.getElementById("analyzeBtn").disabled = true;
+  document.getElementById("resultArea").innerHTML = "";
+}
+
+async function analyze() {
+  if (!base64Data) return;
+  const txType = document.getElementById("txType").value;
+  const rule = RULES[txType];
+  const today = new Date();
+
+  document.getElementById("analyzeBtn").disabled = true;
+  document.getElementById("resultArea").innerHTML = `
+    <div class="result">
+      <div class="loading">
+        <i class="ti ti-loader-2"></i>
+        <p>Analyse de l'image en cours…</p>
+      </div>
+    </div>`;
+
+  try {
+    const resp = await fetch("/api/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        imageBase64: base64Data,
+        mediaType: fileType,
+        txType,
+        todayStr: today.toLocaleDateString("fr-FR")
+      })
+    });
+
+    const json = await resp.json();
+    if (!json.ok || !json.data) throw new Error(json.error || "Erreur serveur");
+
+    const parsed = json.data;
+    const checks = [];
+    let allOk = true;
+
+    // Numéro
+    const numExtrait = (parsed.numero || "").replace(/[\s\+]/g, "").replace(/^226/, "");
+    const numAttendu = rule.numero.replace(/[\s\+]/g, "").replace(/^226/, "");
+    const numOk = numExtrait === numAttendu
+      || numExtrait.endsWith(numAttendu)
+      || numAttendu.endsWith(numExtrait)
+      || (numExtrait.length >= 8 && numAttendu.includes(numExtrait.slice(-8)));
+    if (!numOk) allOk = false;
+    checks.push({
+      label: "Numéro", ok: numOk,
+      val: parsed.numero || "non trouvé",
+      detail: numOk ? `Correspond à ${rule.numero}` : `Attendu : ${rule.numero}`
+    });
+
+    // Montant
+    const montantVal = parseInt((parsed.montant || "").replace(/\D/g, ""));
+    const montantOk = montantVal > 0;
+    checks.push({
+      label: "Montant", ok: montantOk,
+      val: montantOk ? `${montantVal.toLocaleString("fr-FR")} FCFA` : "non trouvé",
+      detail: montantOk ? "Montant détecté" : "Montant introuvable"
+    });
+
+    // Nom (OM national uniquement)
+    if (rule.nom) {
+      const nomOk = parsed.nom && parsed.nom.trim().length > 2;
+      if (!nomOk) allOk = false;
+      checks.push({
+        label: "Nom", ok: nomOk,
+        val: parsed.nom || "non trouvé",
+        detail: nomOk ? "Nom complet présent" : "Nom complet requis"
+      });
+    }
+
+    // Date
+    if (rule.date && rule.jours > 0) {
+      let dateOk = false, dateDetail = "Date introuvable";
+      if (parsed.date) {
+        const m = parsed.date.match(/(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/);
+        if (m) {
+          let y = parseInt(m[3]); if (y < 100) y += 2000;
+          const txDate = new Date(y, parseInt(m[2]) - 1, parseInt(m[1]));
+          if (!isNaN(txDate)) {
+            const diff = Math.floor((today - txDate) / 86400000);
+            dateOk = diff >= 0 && diff <= rule.jours;
+            dateDetail = dateOk
+              ? `Il y a ${diff} jour(s) — valide (max ${rule.jours}j)`
+              : diff > rule.jours
+                ? `Trop ancien : ${diff} jours (max ${rule.jours})`
+                : "Date future — invalide";
+          } else { dateDetail = "Date non reconnue"; }
+        } else { dateDetail = "Format de date non reconnu"; }
+      }
+      if (!dateOk) allOk = false;
+      checks.push({ label: "Date", ok: dateOk, val: parsed.date || "non trouvée", detail: dateDetail });
+    }
+
+    // Statut
+    const s = (parsed.statut || "").toLowerCase();
+    const statutOk = s.includes("succ") || s.includes("réuss") || s.includes("reuss") || s.includes("effectu") || s.includes("reussi");
+    if (!statutOk) allOk = false;
+    checks.push({
+      label: "Statut", ok: statutOk,
+      val: parsed.statut || "inconnu",
+      detail: statutOk ? "Transaction réussie" : "Transaction non confirmée"
+    });
+
+    const checksHtml = checks.map(c => `
+      <div class="check-item">
+        <i class="ti ${c.ok ? "ti-circle-check ok-icon" : "ti-circle-x fail-icon"}"></i>
+        <span class="check-label">${c.label}</span>
+        <div class="check-val">
+          <strong>${c.val}</strong>
+          <span>${c.detail}</span>
+        </div>
+      </div>`).join("");
+
+    const st = allOk ? "ok" : "fail";
+    const ico = allOk ? "ti-shield-check" : "ti-shield-x";
+    const titre = allOk ? "Transaction validée ✓" : "Transaction refusée ✗";
+
+    document.getElementById("resultArea").innerHTML = `
+      <div class="result">
+        <div class="result-header ${st}">
+          <i class="ti ${ico}"></i>
+          <div>
+            <h3>${titre}</h3>
+            <div class="sub">${parsed.type_detecte || ""} · confiance: ${parsed.confiance || "?"}</div>
+          </div>
+        </div>
+        <div class="result-body">
+          ${checksHtml}
+          ${parsed.notes ? `<div class="notes-box"><i class="ti ti-info-circle" style="font-size:13px;vertical-align:-1px;margin-right:4px"></i>${parsed.notes}</div>` : ""}
+        </div>
+      </div>
+      <button class="btn btn-ghost" onclick="reset(); document.getElementById('resultArea').innerHTML='';">
+        <i class="ti ti-refresh"></i> Vérifier une autre transaction
+      </button>`;
+
+  } catch(err) {
+    document.getElementById("resultArea").innerHTML = `
+      <div class="result">
+        <div class="result-header warn"><i class="ti ti-alert-triangle"></i><h3>Erreur</h3></div>
+        <div class="result-body"><p style="font-size:13px;color:var(--text-secondary)">${err.message}</p></div>
+      </div>`;
+  }
+  document.getElementById("analyzeBtn").disabled = false;
+}
+</script>
+</body>
+</html>
